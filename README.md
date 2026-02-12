@@ -2,8 +2,6 @@
 
 Enterprise-grade credit card fraud detection platform powered by CatBoost, AMD Instinct GPUs, and ROCm.
 
-![AMD Logo](https://upload.wikimedia.org/wikipedia/commons/7/7c/AMD_Logo.svg)
-
 ## Features
 
 - **CatBoost Explainable AI**: State-of-the-art gradient boosting with feature importance analysis
@@ -182,7 +180,7 @@ catboost_demo/
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License. See `LICENSE` file for details.
 
