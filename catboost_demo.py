@@ -143,7 +143,7 @@ def perform_feature_selection(train_pool, X):
 # MODEL TRAINING (GPU vs CPU)
 ############################################################
 
-def train_credit_model(X, y, categorical_cols, use_gpu=True, iterations=500):
+def train_credit_model(X, y, categorical_cols, use_gpu=True, iterations=500, depth=8, learning_rate=0.05):
 
     logger.info("Splitting dataset")
 
@@ -156,14 +156,15 @@ def train_credit_model(X, y, categorical_cols, use_gpu=True, iterations=500):
 
     device_type = "GPU" if use_gpu else "CPU"
     logger.info(f"Starting CatBoost {device_type} training")
+    logger.info(f"Training parameters - Iterations: {iterations}, Depth: {depth}, Learning Rate: {learning_rate}")
 
     start_time = time.time()
 
     if use_gpu:
         model = CatBoostClassifier(
             iterations=iterations,
-            depth=8,                    # Increased depth to utilize GPU better
-            learning_rate=0.05,         # Lower LR for more iterations
+            depth=depth,                    # User-configurable depth
+            learning_rate=learning_rate,    # User-configurable learning rate
             loss_function="Logloss",
             eval_metric="Logloss",
             task_type="GPU",
@@ -176,8 +177,8 @@ def train_credit_model(X, y, categorical_cols, use_gpu=True, iterations=500):
     else:
         model = CatBoostClassifier(
             iterations=iterations,
-            depth=8,                    # Match GPU depth
-            learning_rate=0.05,         # Match GPU learning rate
+            depth=depth,                    # User-configurable depth
+            learning_rate=learning_rate,    # User-configurable learning rate
             loss_function="Logloss",
             eval_metric="AUC",
             task_type="CPU",
@@ -220,7 +221,9 @@ def train_credit_model(X, y, categorical_cols, use_gpu=True, iterations=500):
         "Classification Report": report,
         "Training Time": training_time,
         "Device": device_type,
-        "Iterations": iterations
+        "Iterations": iterations,
+        "Depth": depth,
+        "Learning Rate": learning_rate
     }
 
     return model, importance_df, selected_features, metrics
@@ -278,7 +281,7 @@ def store_test_data(X, y, cat_cols):
 # BENCHMARK COMPARISON
 ############################################################
 
-def run_benchmark_comparison(X, y, cat_cols, iterations=1000):
+def run_benchmark_comparison(X, y, cat_cols, iterations=1000, depth=8, learning_rate=0.05):
     """Compare GPU vs CPU performance"""
     
     results = {}
@@ -297,7 +300,7 @@ def run_benchmark_comparison(X, y, cat_cols, iterations=1000):
     # Run CPU benchmark
     logger.info("Running CPU Benchmark...")
     cpu_model, cpu_importance, cpu_features, cpu_metrics = train_credit_model(
-        X_sample, y_sample, cat_cols, use_gpu=False, iterations=iterations
+        X_sample, y_sample, cat_cols, use_gpu=False, iterations=iterations, depth=depth, learning_rate=learning_rate
     )
     
     results["CPU"] = {
@@ -317,7 +320,7 @@ def run_benchmark_comparison(X, y, cat_cols, iterations=1000):
     # Run GPU benchmark  
     logger.info("Running GPU Benchmark...")
     gpu_model, gpu_importance, gpu_features, gpu_metrics = train_credit_model(
-        X_sample, y_sample, cat_cols, use_gpu=True, iterations=iterations
+        X_sample, y_sample, cat_cols, use_gpu=True, iterations=iterations, depth=depth, learning_rate=learning_rate
     )
     
     results["GPU"] = {
@@ -393,8 +396,8 @@ def predict_fraud_risk(*inputs, current_model=None):
         risk_level
     )
 
-def retrain_model(use_gpu, iterations_val):
-    """Retrain model with selected device"""
+def retrain_model(use_gpu, iterations_val, depth_val, lr_val):
+    """Retrain model with selected device and hyperparameters"""
     global model, importance_df, selected_features, metrics, X_test_global, y_test_global
     
     logger.info(f"Retraining model on {'GPU' if use_gpu else 'CPU'}")
@@ -403,12 +406,13 @@ def retrain_model(use_gpu, iterations_val):
     store_test_data(X, y, cat_cols)
     
     model, importance_df, selected_features, metrics = train_credit_model(
-        X, y, cat_cols, use_gpu=use_gpu, iterations=int(iterations_val)
+        X, y, cat_cols, use_gpu=use_gpu, iterations=int(iterations_val), 
+        depth=int(depth_val), learning_rate=float(lr_val)
     )
     
     return (
         f"Model retrained on {'GPU' if use_gpu else 'CPU'}",
-        f"Training Time: {metrics['Training Time']:.2f}s",
+        f"Training Time: {metrics['Training Time']:.2f}s | Depth: {metrics['Depth']} | LR: {metrics['Learning Rate']}",
         f"AUC Score: {metrics['AUC']:.4f}",
         importance_df
     )
@@ -559,17 +563,25 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
             gr.Markdown(f"**ROC-AUC:** {metrics['AUC']:.4f}")
             gr.Markdown(f"**Training Time:** {metrics['Training Time']:.2f} sec")
             gr.Markdown(f"**Iterations:** {metrics['Iterations']}")
+        
+        with gr.Row():
+            gr.Markdown(f"**Depth:** {metrics.get('Depth', 'N/A')}")
+            gr.Markdown(f"**Learning Rate:** {metrics.get('Learning Rate', 'N/A')}")
 
     ################################################
     # GPU vs CPU Benchmark
     ################################################ 
-    with gr.Tab("🚀 GPU vs CPU Benchmark"):
+    with gr.Tab("GPU vs CPU Benchmark"):
         
         gr.Markdown("## CatBoost Performance Comparison")
         gr.Markdown("*Compare AMD Instinct GPU vs CPU performance on fraud detection*")
         
         benchmark_btn = gr.Button("Run Benchmark Comparison", variant="primary")
-        benchmark_iterations = gr.Slider(500, 2000, value=1000, label="Training Iterations")
+        
+        with gr.Row():
+            benchmark_iterations = gr.Slider(500, 2000, value=1000, label="Training Iterations")
+            benchmark_depth = gr.Slider(3, 12, value=8, step=1, label="Tree Depth")
+            benchmark_lr = gr.Slider(0.01, 0.3, value=0.05, step=0.01, label="Learning Rate")
         
         with gr.Row():
             cpu_results = gr.JSON(label="CPU Results")
@@ -577,9 +589,9 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
             
         benchmark_status = gr.Textbox(label="Benchmark Status")
         
-        def run_benchmark(iterations):
+        def run_benchmark(iterations, depth, lr):
             try:
-                results, cpu_imp, gpu_imp = run_benchmark_comparison(X, y, cat_cols, iterations)
+                results, cpu_imp, gpu_imp = run_benchmark_comparison(X, y, cat_cols, iterations, depth, lr)
                 speedup = results['CPU']['Runtime']/results['GPU']['Runtime']
                 speedup_text = f"GPU Speedup: {speedup:.2f}x"
                 if speedup > 1:
@@ -597,20 +609,27 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
         
         benchmark_btn.click(
             run_benchmark,
-            inputs=[benchmark_iterations],
+            inputs=[benchmark_iterations, benchmark_depth, benchmark_lr],
             outputs=[cpu_results, gpu_results, benchmark_status]
         )
 
     ################################################
     # Model Training Control
     ################################################
-    with gr.Tab("⚙️ Model Training"):
+    with gr.Tab("Model Training"):
         
-        gr.Markdown("## Retrain Model")
+        gr.Markdown("## Retrain Model with Custom Hyperparameters")
+        gr.Markdown("*Adjust training parameters to optimize model performance*")
         
         with gr.Row():
             device_choice = gr.Radio(["CPU", "GPU"], value="GPU", label="Training Device")
             training_iterations = gr.Slider(50, 1000, value=200, label="Training Iterations")
+        
+        with gr.Row():
+            tree_depth = gr.Slider(3, 12, value=8, step=1, label="Tree Depth", 
+                                 info="Controls model complexity - higher values may overfit")
+            learning_rate = gr.Slider(0.01, 0.3, value=0.05, step=0.01, label="Learning Rate", 
+                                    info="Controls step size - lower values need more iterations")
         
         retrain_btn = gr.Button("Retrain Model", variant="primary")
         
@@ -620,20 +639,20 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
             train_auc = gr.Textbox(label="Model Performance")
             updated_importance = gr.DataFrame(label="Updated Feature Importance")
         
-        def handle_retrain(device, iterations):
+        def handle_retrain(device, iterations, depth, lr):
             use_gpu = (device == "GPU")
-            return retrain_model(use_gpu, iterations)
+            return retrain_model(use_gpu, iterations, depth, lr)
         
         retrain_btn.click(
             handle_retrain,
-            inputs=[device_choice, training_iterations],
+            inputs=[device_choice, training_iterations, tree_depth, learning_rate],
             outputs=[train_status, train_time, train_auc, updated_importance]
         )
 
     ################################################
     # Feature Explainability
     ################################################
-    with gr.Tab("🔍 Explainability"):
+    with gr.Tab("Explainability"):
 
         gr.Markdown("## Feature Importance Ranking")
         gr.DataFrame(importance_df)
@@ -644,7 +663,7 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
     ################################################
     # Test Set Evaluation
     ################################################
-    with gr.Tab("🧪 Test Set Evaluation"):
+    with gr.Tab("Test Set Evaluation"):
         
         gr.Markdown("## Model Testing on Hold-out Data (20% of dataset)")
         gr.Markdown("*Evaluate model performance on unseen test data*")
@@ -687,7 +706,7 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
     ################################################
     # Risk Prediction Tool
     ################################################
-    with gr.Tab("🎯 Transaction Fraud Simulator"):
+    with gr.Tab("Transaction Fraud Simulator"):
 
         inputs = []
 
