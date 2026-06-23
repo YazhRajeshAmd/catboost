@@ -24,7 +24,7 @@ const STEPS = [
     target: '[data-tour="submit"]',
     title: 'Run Fraud Analysis',
     body: 'Click Analyze Transaction to run the trained CatBoost model. The GPU-accelerated model returns a fraud probability and LOW/MEDIUM/HIGH risk tier in milliseconds.',
-    position: 'bottom',
+    position: 'top',
   },
   {
     target: '[data-tour="results"]',
@@ -43,11 +43,13 @@ const STEPS = [
 
 function getTooltipPos(rect, position) {
   const centreX = Math.max(12, Math.min(rect.left + rect.width / 2 - TOOLTIP_W / 2, window.innerWidth - TOOLTIP_W - 12))
+  // For left/right, vertically center the tooltip on the element and clamp to viewport
+  const midY = Math.max(GAP + 60, Math.min(rect.top + rect.height / 2 - 90, window.innerHeight - 220))
 
   if (position === 'bottom') return { top: rect.bottom + GAP, left: centreX, width: TOOLTIP_W }
   if (position === 'top')    return { bottom: window.innerHeight - rect.top + GAP, left: centreX, width: TOOLTIP_W }
-  if (position === 'right')  return { top: rect.top, left: rect.right + GAP, width: TOOLTIP_W }
-  if (position === 'left')   return { top: rect.top, left: rect.left - GAP - TOOLTIP_W, width: TOOLTIP_W }
+  if (position === 'right')  return { top: midY, left: rect.right + GAP, width: TOOLTIP_W }
+  if (position === 'left')   return { top: midY, left: rect.left - GAP - TOOLTIP_W, width: TOOLTIP_W }
 }
 
 export default function OnboardingTour({ theme = 'dark', onToggle }) {
@@ -75,16 +77,10 @@ export default function OnboardingTour({ theme = 'dark', onToggle }) {
   const measureTarget = useCallback(() => {
     const el = document.querySelector(STEPS[step].target)
     if (!el) return
-
-    const r = el.getBoundingClientRect()
-    const inView = r.top >= 0 && r.bottom <= window.innerHeight
-
-    if (inView) {
-      setRect(r)
-    } else {
-      el.scrollIntoView({ behavior: 'smooth', block: STEPS[step].scrollBlock || 'center' })
-      setTimeout(() => setRect(el.getBoundingClientRect()), 180)
-    }
+    // Always scroll the target to the center of the viewport so the
+    // spotlight appears at a consistent central position each step.
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setTimeout(() => setRect(el.getBoundingClientRect()), 380)
   }, [step])
 
   useLayoutEffect(() => {
@@ -163,7 +159,7 @@ export default function OnboardingTour({ theme = 'dark', onToggle }) {
             height:  rect.height + PAD * 2,
             opacity: 0,
           }}
-          transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         />
       )}
 
@@ -173,10 +169,10 @@ export default function OnboardingTour({ theme = 'dark', onToggle }) {
             key={step}
             className={styles.tooltip}
             style={tooltipPos}
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{    opacity: 0, y: 6 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
+            exit={{    opacity: 0, y: -6 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
           >
             <div className={styles.tooltipStep}>Step {step + 1} of {STEPS.length}</div>
             <div className={styles.tooltipTitle}>{current.title}</div>

@@ -7,6 +7,7 @@ import MetricsBar from './components/MetricsBar/MetricsBar'
 import FeatureCards from './components/FeatureCards/FeatureCards'
 import Footer from './components/Footer/Footer'
 import OnboardingTour from './components/OnboardingTour/OnboardingTour'
+import HeroStats from './components/HeroStats/HeroStats'
 
 // Median values for the 22 PCA features not shown in the form
 // Order matches creditcard.csv columns: Time, V1–V28, Amount
@@ -111,6 +112,8 @@ export default function App() {
       <Header />
 
       <main style={{ flex: 1, maxWidth: '1100px', margin: '0 auto', width: '100%', padding: '0 var(--space-xl) var(--space-xl)' }}>
+
+        <HeroStats />
 
         {results && <MetricsBar metrics={results} />}
 

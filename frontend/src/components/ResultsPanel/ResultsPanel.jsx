@@ -187,7 +187,7 @@ function TabTestEval({ results }) {
   ]
   return (
     <div className={styles.tabContent}>
-      <p className={styles.tabIntro}>Evaluation on 20% hold-out test set ({cm.tn + cm.fp + cm.fn + cm.tp} samples).</p>
+      <p className={styles.tabIntro}>Evaluation on 20% hold-out test set ({(cm.tn + cm.fp + cm.fn + cm.tp).toLocaleString()} samples).</p>
       <div className={styles.evalMetrics}>
         {metrics.map((m) => (
           <div key={m.label} className={styles.evalChip}>
