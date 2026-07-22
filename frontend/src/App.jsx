@@ -95,7 +95,7 @@ export default function App() {
 
     try {
       const { Client } = await import('@gradio/client')
-      const client = await Client.connect('http://localhost:7866')
+      const client = await Client.connect('http://localhost:7867')
       const inputs = buildGradioInputs(formValues)
       const response = await client.predict('/predict', inputs)
       setResults(parseGradioResult(response.data, formValues))

@@ -743,4 +743,4 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
 # Launch UI
 ############################################################
 
-demo.launch(server_port=7866, server_name="0.0.0.0")
+demo.launch(server_port=7867, server_name="0.0.0.0", strict_cors=False)
