@@ -256,7 +256,7 @@ export default function ResultsPanel({ results, loading, error, hasResults }) {
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
             <p className={styles.emptyTitle}>No analysis yet</p>
-            <p className={styles.emptyBody}>Enter transaction details and click Analyze, or load a sample to preview results.</p>
+            <p className={styles.emptyBody}>Enter transaction details and click Analyze to see fraud risk results.</p>
           </div>
         )}
 

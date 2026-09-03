@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './styles/tokens.css'
 import Header from './components/Header/Header'
-import FraudForm, { SAMPLE_RESULT } from './components/FraudForm/FraudForm'
+import FraudForm from './components/FraudForm/FraudForm'
 import ResultsPanel from './components/ResultsPanel/ResultsPanel'
 import MetricsBar from './components/MetricsBar/MetricsBar'
 import FeatureCards from './components/FeatureCards/FeatureCards'
@@ -78,18 +78,8 @@ export default function App() {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
   }
 
-  async function handleResult(formValues, isSample) {
+  async function handleResult(formValues) {
     setError(null)
-
-    if (isSample) {
-      setLoading(true)
-      setTimeout(() => {
-        setLoading(false)
-        setResults(SAMPLE_RESULT)
-      }, 1200)
-      return
-    }
-
     setLoading(true)
     setResults(null)
 

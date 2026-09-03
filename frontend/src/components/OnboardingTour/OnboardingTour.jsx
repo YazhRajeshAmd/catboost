@@ -94,6 +94,27 @@ export default function OnboardingTour({ theme = 'dark', onToggle }) {
     return () => window.removeEventListener('resize', measureTarget)
   }, [visible, measureTarget])
 
+  // Block user scrolling during the tour so fixed tooltips stay aligned with
+  // their targets. The tour's own scrollIntoView (programmatic) still works.
+  useEffect(() => {
+    if (!visible) return
+    const scrollKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '])
+    const prevent = (e) => e.preventDefault()
+    const preventKeys = (e) => {
+      const tag = e.target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON') return
+      if (scrollKeys.has(e.key)) e.preventDefault()
+    }
+    window.addEventListener('wheel', prevent, { passive: false })
+    window.addEventListener('touchmove', prevent, { passive: false })
+    window.addEventListener('keydown', preventKeys, { passive: false })
+    return () => {
+      window.removeEventListener('wheel', prevent)
+      window.removeEventListener('touchmove', prevent)
+      window.removeEventListener('keydown', preventKeys)
+    }
+  }, [visible])
+
   const showTour   = visible && rect
   const current    = STEPS[step]
   const tooltipPos = rect ? getTooltipPos(rect, current.position) : null

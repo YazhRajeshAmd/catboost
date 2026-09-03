@@ -1,53 +1,6 @@
 import { useState } from 'react'
 import styles from './FraudForm.module.css'
 
-const SUSPICIOUS_SAMPLE = {
-  amount: 2125.87,
-  time: 406,
-  v1: -3.043541,
-  v2: -3.157307,
-  v3: 1.088463,
-  v4: 2.288644,
-  v14: -9.499020,
-  v17: -18.683715,
-}
-
-const NORMAL_SAMPLE = {
-  amount: 49.99,
-  time: 86400,
-  v1: 1.191857,
-  v2: 0.266151,
-  v3: 0.166480,
-  v4: 0.448154,
-  v14: -0.311169,
-  v17: -0.753917,
-}
-
-const SAMPLE_RESULT = {
-  probability: '87.34%',
-  rawScore: 0.8734,
-  riskTier: 'HIGH',
-  auc: '0.9994',
-  processingTime: '12ms',
-  device: 'GPU (MI300X)',
-  topFeatures: [
-    { name: 'V17', value: -18.68, impact: 'high' },
-    { name: 'V14', value: -9.50,  impact: 'high' },
-    { name: 'Amount', value: 2125.87, impact: 'medium' },
-    { name: 'V1', value: -3.04, impact: 'medium' },
-    { name: 'V2', value: -3.16, impact: 'medium' },
-  ],
-  benchmarkCpu: '13.2s',
-  benchmarkGpu: '4.1s',
-  speedup: '3.2×',
-  confusionMatrix: { tn: 56789, fp: 12, fn: 8, tp: 91 },
-  testAuc: '0.9994',
-  testAccuracy: '0.9997',
-  testPrecision: ' 0.8835',
-  testRecall: '0.9191',
-  testF1: '0.9009',
-}
-
 const FIELDS = [
   { key: 'amount', label: 'Transaction Amount (USD)', min: 0, max: 25000, step: 0.01, defaultVal: 100.00, help: 'Dollar value of the transaction' },
   { key: 'time',   label: 'Time (seconds elapsed)',   min: 0, max: 172800, step: 1,    defaultVal: 86400,  help: 'Seconds since first transaction in dataset' },
@@ -70,12 +23,7 @@ export default function FraudForm({ onResult, loading }) {
 
   function handleSubmit(e) {
     e.preventDefault()
-    onResult(values, false)
-  }
-
-  function loadSample(sample) {
-    setValues(sample)
-    onResult(null, true)
+    onResult(values)
   }
 
   return (
@@ -116,28 +64,6 @@ export default function FraudForm({ onResult, loading }) {
       >
         {loading ? 'Analyzing...' : 'Analyze Transaction'}
       </button>
-
-      <div className={styles.sampleRow}>
-        <button type="button" className={styles.sampleBtn} onClick={() => loadSample(SUSPICIOUS_SAMPLE)} disabled={loading}>
-          Load Suspicious Sample
-        </button>
-        <button type="button" className={styles.sampleBtn} onClick={() => loadSample(NORMAL_SAMPLE)} disabled={loading}>
-          Load Normal Sample
-        </button>
-      </div>
-
-      <div className={styles.sampleResultHint}>
-        <span className={styles.hintIcon}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-        </span>
-        Sample data uses a pre-loaded result. Start the backend for live inference.
-      </div>
     </form>
   )
 }
-
-export { SAMPLE_RESULT, SUSPICIOUS_SAMPLE, NORMAL_SAMPLE }
