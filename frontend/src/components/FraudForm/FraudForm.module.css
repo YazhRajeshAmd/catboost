@@ -1,0 +1,99 @@
+.form {
+  background-color: var(--amd-bg-card);
+  border: 1px solid var(--amd-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  box-shadow: var(--shadow-card);
+}
+
+.formHeader { margin-bottom: var(--space-xs); }
+
+.formTitle {
+  font-family: var(--font-primary);
+  font-size: var(--text-sub);
+  font-weight: var(--font-weight-bold);
+  color: var(--amd-white);
+  margin-bottom: var(--space-xs);
+}
+
+.formSub {
+  font-family: var(--font-primary);
+  font-size: var(--text-small);
+  color: var(--amd-muted);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.label {
+  font-family: var(--font-primary);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--amd-muted);
+  letter-spacing: 0.01em;
+}
+
+.input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--amd-bg-input);
+  border: 1px solid var(--amd-border);
+  border-radius: var(--radius-sm);
+  color: var(--amd-white);
+  font-family: var(--font-primary);
+  font-size: var(--text-body);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  border-color: var(--amd-teal);
+  box-shadow: 0 0 0 3px rgba(0, 194, 222, 0.12);
+}
+
+.help {
+  font-family: var(--font-primary);
+  font-size: 0.7rem;
+  color: var(--amd-border-mid);
+}
+
+.note {
+  font-family: var(--font-primary);
+  font-size: 0.72rem;
+  color: var(--amd-border-mid);
+  padding: var(--space-sm) var(--space-sm);
+  background-color: rgba(0, 194, 222, 0.04);
+  border: 1px solid rgba(0, 194, 222, 0.1);
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, var(--amd-teal), var(--amd-teal-dark));
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--amd-black);
+  font-family: var(--font-primary);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -366,9 +366,10 @@ X, y, cat_cols = prepare_data(dataset)
 # Store test data for later evaluation
 store_test_data(X, y, cat_cols)
 
-# Train initial GPU model for quick start
+# CatBoost's GPU backend is CUDA-only (no ROCm), so train on CPU here to
+# avoid a hard crash at startup on AMD hardware.
 model, importance_df, selected_features, metrics = train_credit_model(
-    X, y, cat_cols, use_gpu=True, iterations=500
+    X, y, cat_cols, use_gpu=False, iterations=500
 )
 
 business_kpis = calculate_business_kpis(dataset)
@@ -622,7 +623,7 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
         gr.Markdown("*Adjust training parameters to optimize model performance*")
         
         with gr.Row():
-            device_choice = gr.Radio(["CPU", "GPU"], value="GPU", label="Training Device")
+            device_choice = gr.Radio(["CPU", "GPU"], value="CPU", label="Training Device")
             training_iterations = gr.Slider(50, 1000, value=200, label="Training Iterations")
         
         with gr.Row():
@@ -736,11 +737,12 @@ with gr.Blocks(title="Enterprise Credit Card Fraud Detection Platform", theme=gr
         predict_btn.click(
             predict_fraud_risk,
             inputs=inputs,
-            outputs=[prob_output, risk_output]
+            outputs=[prob_output, risk_output],
+            api_name="predict",
         )
 
 ############################################################
 # Launch UI
 ############################################################
 
-demo.launch(server_port=7866, server_name="0.0.0.0")
+demo.launch(server_port=7867, server_name="0.0.0.0", strict_cors=False)
